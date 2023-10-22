@@ -134,6 +134,7 @@ def depthFirstSearch(problem):
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
+    # print(problem)
     front = util.Queue()
 
     expl = []
@@ -142,15 +143,16 @@ def breadthFirstSearch(problem):
     strt_node = (strt_state, [])
 
     front.push(strt_node)
+    # print(f'start state: {strt_state}')
 
     while front:
         state, act = front.pop()
-
+        # print(state)
         if state not in expl:
             expl.append(state)
 
             if problem.isGoalState(state):
-                print(act)
+                # print(act)
                 return act
             else:
                 for s, a, c in problem.getSuccessors(state):
