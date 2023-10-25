@@ -289,9 +289,10 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
-        # self.visitedCorners = []
+        self.startState = startingGameState
+        self.visitedCorners = {}
         # # For display purposes
-        # self._visited, self._visitedlist, self._expanded = {}, [], 0 # DO NOT CHANGE
+        self._visited, self._visitedlist = {}, [] # DO NOT CHANGE
 
     def getStartState(self):
         """
@@ -299,8 +300,10 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        # print(self.startingPosition)
-        return (self.startingPosition,[])
+        # print(self.startingPosition)\
+        # self.visitedCorners[(self.startingPosition, 4)] = []
+        # return (self.startingPosition, 4)
+        return (self.startingPosition,()) # start pos, visited corners
         # util.raiseNotDefined()
 
     def isGoalState(self, state):
@@ -309,9 +312,12 @@ class CornersProblem(search.SearchProblem):
         """
         "*** YOUR CODE HERE ***"
         pos = state[0]
-        Corners = state[1]
+        Corners = list(state[1])
+        # pos = state[0]
+        # Corners = list(self.visitedCorners[state])
+        # print(Corners)
         if pos in self.corners and not pos in Corners:
-                Corners.append(pos)
+                Corners = Corners + [pos]
         return len(Corners) == 4 and pos in self.corners
         # pos, Corners = state
         # print(f'check state: {pos}\nCorners: {Corners}')
@@ -340,14 +346,20 @@ class CornersProblem(search.SearchProblem):
 
             "*** YOUR CODE HERE ***"
             x,y = state[0]
-            Corners = state[1]
+            Corners = list(state[1])
+            # x, y = state[0]
+            # Corners = list(self.visitedCorners[state])
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
             if not self.walls[nextx][nexty]:
                 nextState = (nextx, nexty)
+                # succCorners = list(Corners)
                 if nextState in self.corners and not nextState in Corners:
+                        # succCorners.append(nextState)
                         Corners = Corners + [nextState]
-                successors.append(((nextState, Corners), action, 1))
+                # self.visitedCorners[(nextState, 4-len(succCorners))] = succCorners
+                # print(f'state: {nextState}, corners: {Corners}')
+                successors.append(((nextState, tuple(Corners)), action, 1))
         self._expanded += 1 # DO NOT CHANGE
         return successors
 
@@ -382,11 +394,12 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    print(f'corners: {corners}')
-    print(f'walls: {walls}')
+    # print(f'corners: {corners}')
+    # print(f'walls: {walls}')
     # return 0 # Default to trivial solution
-    xy = state[0]
-    visitedCorners = state[1]
+    pos = state[0]
+    visitedCorners = list(state[1])
+    # visitedCorners = CornersProblem.visitedCorners[state]
     #Finding out the not visited corners
     unvisitedCorners = []
     for corner in corners:
@@ -395,17 +408,23 @@ def cornersHeuristic(state, problem):
             
     """ A heuristic could be maximum of Manhattan distance between current
         position and all unvisited corners."""
-##    from util import manhattanDistance    
-##    heuristicvalue=[0]
-##    for corner in unvisitedCorners:
-##        heuristicvalue.append(manhattanDistance(xy,corner))
-##    return max(heuristicvalue)
-    
-    """ Using Maze Distance to farthest corner as the heuristic. """
-    heuristicvalue=[0]
+    manhattanheuristic = [0]
+    mazeheuristic = [0]
     for corner in unvisitedCorners:
-        heuristicvalue.append(mazeDistance(xy,corner,problem.startingGameState))
-    return max(heuristicvalue)
+        manhattanheuristic.append(util.manhattanDistance(pos,corner))
+        mazeheuristic.append(mazeDistance(pos,corner,problem.startState))
+
+    # print(heuristicvalue)
+    manhattanheuristic.pop(0) if len(manhattanheuristic) > 1 else manhattanheuristic
+    mazeheuristic.pop(0) if len(mazeheuristic) > 1 else mazeheuristic
+    # print(heuristicvalue)
+    # print(len(mazeheuristic))
+    # heuristicvalue.sort()
+    # return (max(manhattanheuristic)+min(manhattanheuristic)*20) + min(mazeheuristic)*1.5 + len(unvisitedCorners)
+    # return (max(manhattanheuristic)*90+min(mazeheuristic))*40+min(manhattanheuristic)+len(unvisitedCorners)
+    return (max(manhattanheuristic)*90+(min(manhattanheuristic)*10**6 if len(manhattanheuristic)>2 else 0))
+    # return (min(manhattanheuristic)*10**6 if len(manhattanheuristic)>2 else 0)
+    # return (max(manhattanheuristic)+min(mazeheuristic)+(min(manhattanheuristic) if len(manhattanheuristic)>2 else 0))
 
 
 class AStarCornersAgent(SearchAgent):

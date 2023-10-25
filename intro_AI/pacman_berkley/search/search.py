@@ -146,6 +146,8 @@ def breadthFirstSearch(problem):
     # print(f'start state: {strt_state}')
 
     while front:
+        # print(f'front: {front.print()}')
+        # print(f'expl {expl}')
         state, act = front.pop()
         # print(state)
         if state not in expl:
@@ -220,22 +222,32 @@ def aStarSearch(problem, heuristic=nullHeuristic):
         expl[state] = [p, act, cost]
 
         if problem.isGoalState(state):
+            # print(expl)
             path = []
             while expl[state][0] != None:
                 path.append(expl[state][1])
                 state = expl[state][0]
 
             # print(path[::-1])
-
+            # print(problem.getCostOfActions(path[::-1]))
             return path[::-1]
         
         else:
             for s, a, c in problem.getSuccessors(state):
                 # path_cost = util.manhattanDistance(state, strt_state) + heuristic(state, problem)
                 # est_cost = cost + 1 + heuristic(s, problem)
-                est_cost = cost + problem.getCostOfActions([a]) + heuristic(s, problem)
+                # est_cost = cost + problem.getCostOfActions([a]) + heuristic(s, problem)
+                est_cost = (cost + problem.getCostOfActions([a])) + heuristic(s, problem)*40*(10**6)
+
+
+                # isexpl = False
+                # for node in expl:
+                # #     print(node)
+                #     if s == node and est_cost >= expl[node][2]:
+                #         isexpl = True
 
                 if not ((est_cost > cost) and (s in expl)):
+                # if not isexpl:
                     front.update((s, state, a, est_cost), est_cost)
                     expl[s] = [state, a, est_cost]
 
