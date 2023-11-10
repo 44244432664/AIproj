@@ -237,7 +237,7 @@ def aStarSearch(problem, heuristic=nullHeuristic):
                 # path_cost = util.manhattanDistance(state, strt_state) + heuristic(state, problem)
                 # est_cost = cost + 1 + heuristic(s, problem)
                 # est_cost = cost + problem.getCostOfActions([a]) + heuristic(s, problem)
-                est_cost = (cost + problem.getCostOfActions([a])) + heuristic(s, problem)*40*(10**6)
+                est_cost = (cost + problem.getCostOfActions([a])) + heuristic(s, problem)
 
 
                 # isexpl = False

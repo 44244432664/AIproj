@@ -376,6 +376,37 @@ class CornersProblem(search.SearchProblem):
             if self.walls[x][y]: return 999999
         return len(actions)
 
+def calc_heuristic(pos, array,  a=1, b=1, c=1, heuf=util.manhattanDistance, state_to_get_wall=None):
+    heuristic = [0]
+    for point in array:
+        heuristic.append(heuf(pos,point)) if state_to_get_wall is None else heuristic.append(heuf(pos,point, state_to_get_wall))
+
+    heuristic.pop(0) if len(heuristic) > 1 else heuristic
+    return (max(heuristic)*a+(min(heuristic)*b if len(heuristic)>2 else 0))*c
+
+
+def get_top_dis(pos, array, isMin=0, heuf=util.manhattanDistance, state_to_get_wall=None):
+    heuristic = [0]
+    for point in array:
+        if state_to_get_wall!=None:
+            heuristic.append(heuf(pos,point, state_to_get_wall)) 
+        else:
+            heuristic.append(heuf(pos,point))
+
+    heuristic.pop(0) if len(heuristic) > 1 else heuristic
+
+    if heuristic:
+        if not isMin:
+            top = max(heuristic)
+        else:
+            top = min(heuristic)
+    else:
+        top = 0
+
+    # print(f'top: {top}')
+    # point = array[heuristic.index(top)] if top!=0 else None
+    # return (top, point)
+    return top
 
 def cornersHeuristic(state, problem):
     """
@@ -408,23 +439,11 @@ def cornersHeuristic(state, problem):
             
     """ A heuristic could be maximum of Manhattan distance between current
         position and all unvisited corners."""
-    manhattanheuristic = [0]
-    mazeheuristic = [0]
-    for corner in unvisitedCorners:
-        manhattanheuristic.append(util.manhattanDistance(pos,corner))
-        mazeheuristic.append(mazeDistance(pos,corner,problem.startState))
-
-    # print(heuristicvalue)
-    manhattanheuristic.pop(0) if len(manhattanheuristic) > 1 else manhattanheuristic
-    mazeheuristic.pop(0) if len(mazeheuristic) > 1 else mazeheuristic
-    # print(heuristicvalue)
-    # print(len(mazeheuristic))
-    # heuristicvalue.sort()
-    # return (max(manhattanheuristic)+min(manhattanheuristic)*20) + min(mazeheuristic)*1.5 + len(unvisitedCorners)
-    # return (max(manhattanheuristic)*90+min(mazeheuristic))*40+min(manhattanheuristic)+len(unvisitedCorners)
-    return (max(manhattanheuristic)*90+(min(manhattanheuristic)*10**6 if len(manhattanheuristic)>2 else 0))
-    # return (min(manhattanheuristic)*10**6 if len(manhattanheuristic)>2 else 0)
-    # return (max(manhattanheuristic)+min(mazeheuristic)+(min(manhattanheuristic) if len(manhattanheuristic)>2 else 0))
+    # pos_corn_d, corn = get_top(pos, unvisitedCorners, 1)
+    # closest_furthes_d, _ = get_top(corn, unvisitedCorners)
+    return calc_heuristic(pos, unvisitedCorners, 90, (10**6), 40*(10**6))
+    # return pos_corn_d + closest_furthes_d
+    
 
 
 class AStarCornersAgent(SearchAgent):
@@ -519,7 +538,44 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    # heuristic = 0
+    foodList = foodGrid.asList()
+
+    # dis = [0]
+    # for point in foodList:
+    #     dis.append(mazeDistance(position, point, problem.startingGameState))
+    
+    # dis.pop(0) if len(dis) > 1 else dis
+    # # closest_food_d, pos = get_top(state, foodList, 1, util.mazeDistance, problem.startingGameState)
+    # nearest_furthest = 0
+    # if len(dis) > 2:
+    #     nearest = foodList[dis.index(min(dis))]
+    #     furthest = foodList[dis.index(max(dis))]
+    #     nearest_furthest = mazeDistance(nearest, furthest, problem.startingGameState)
+
+    # maze = calc_heuristic(position, foodList, 10**3, 10**8, 10**6, mazeDistance, problem.startingGameState)
+    
+    
+    top, right = problem.walls.height-2, problem.walls.width-2
+    corners = [(1,1), (1,top), (right, 1), (right, top)]
+    
+    # heuristic = [0]
+    # for point in corners:
+    #     heuristic.append(mazeDistance(position,point, problem.startingGameState))
+    # heuristic.pop(0) if len(heuristic) > 1 else heuristic
+
+    maze2 = calc_heuristic(position, foodList, 10, 10**8, 10**6)
+    # return (maze2 + get_top_dis(position, corners))
+    return (get_top_dis(position, foodList, 1, mazeDistance, problem.startingGameState) + get_top_dis(position, corners)*10**6+ maze2*10**3)*10**6
+    # return (maze2 + get_top_dis(position, corners))
+    # return 0
+
+    # min_man = get_top_dis(position, foodList, 1)
+    # max_man = get_top_dis(position, foodList)
+    # min_maze = get_top_dis(position, foodList, 1, mazeDistance, problem.startingGameState)
+    # max_maze = get_top_dis(position, foodList, 0, mazeDistance, problem.startingGameState)
+
+    # return (min_maze*(10**8) + max_man*(10**3))*10**4
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -550,7 +606,10 @@ class ClosestDotSearchAgent(SearchAgent):
         problem = AnyFoodSearchProblem(gameState)
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        # util.raiseNotDefined()
+        
+        return search.breadthFirstSearch(problem)
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -586,7 +645,8 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x,y = state
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # util.raiseNotDefined()
+        return self.food[x][y]
 
 def mazeDistance(point1, point2, gameState):
     """
